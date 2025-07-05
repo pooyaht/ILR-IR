@@ -83,93 +83,43 @@ def create_notebook_from_python_files(model_directory, output_notebook_path):
             "    # Copy data using shell command\n",
             "    !cp -vr /tmp/ILR-IR/data /content/drive/MyDrive/ILR-IR/\n",
             "    \n",
+            "except:\n",
+            "    print('Git clone failed. Please manually download the data from: https://github.com/pooyaht/ILR-IR/tree/main/data')\n",
+            "finally:\n",
             "    # Change to the project directory\n",
             "    os.chdir('/content/drive/MyDrive/ILR-IR/')\n",
             "    print(f'Changed working directory to: {os.getcwd()}')\n",
-            "    print('Data downloaded and setup completed successfully!')\n",
-            "    \n",
-            "except:\n",
-            "    print('Git clone failed. Please manually download the data from: https://github.com/pooyaht/ILR-IR/tree/main/data')"
+            "    print('Data downloaded and setup completed successfully!')"
         ]
     }
 
     notebook["cells"].append(github_download_cell)
-
-    # Third cell: Install pyHGT and dependencies
-    install_pyhgt_cell = {
-        "cell_type": "code",
-        "execution_count": None,
-        "metadata": {},
-        "outputs": [],
-        "source": [
-            "# Install pyHGT and required dependencies\n",
-            "!pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu118\n",
-            "!pip install pyHGT\n",
-            "!pip install networkx\n",
-            "!pip install scikit-learn\n",
-            "!pip install more-itertools\n",
-            "!pip install dill\n",
-            "!pip install pandas\n",
-            "!pip install numpy\n",
-            "!pip install tqdm\n",
-            "!pip install seaborn\n",
-            "!pip install matplotlib\n",
-            "print('All dependencies installed successfully!')"
-        ]
-    }
-
-    notebook["cells"].append(install_pyhgt_cell)
-
-    # Fourth cell: Verify installation and imports
-    verify_imports_cell = {
-        "cell_type": "code",
-        "execution_count": None,
-        "metadata": {},
-        "outputs": [],
-        "source": [
-            "# Verify pyHGT installation and import required modules\n",
-            "try:\n",
-            "    import torch\n",
-            "    import torch.nn as nn\n",
-            "    import torch.nn.functional as F\n",
-            "    import numpy as np\n",
-            "    import networkx as nx\n",
-            "    import pandas as pd\n",
-            "    from sklearn.utils import shuffle\n",
-            "    from more_itertools import flatten\n",
-            "    import dill\n",
-            "    from tqdm import tqdm\n",
-            "    import seaborn as sb\n",
-            "    import matplotlib.pyplot as plt\n",
-            "    from pyHGT.model import *\n",
-            "    from pyHGT.data import *\n",
-            "    print('✅ All imports successful!')\n",
-            "    print(f'PyTorch version: {torch.__version__}')\n",
-            "    print(f'CUDA available: {torch.cuda.is_available()}')\n",
-            "    if torch.cuda.is_available():\n",
-            "        print(f'CUDA device: {torch.cuda.get_device_name(0)}')\n",
-            "except ImportError as e:\n",
-            "    print(f'❌ Import error: {e}')\n",
-            "    print('Please check if all dependencies are installed correctly.')"
-        ]
-    }
-
-    notebook["cells"].append(verify_imports_cell)
 
     # Get current script name to exclude it
     current_script = os.path.abspath(__file__)
 
     # Get all Python files recursively, excluding __init__.py and this script
     python_files = []
+    pyhgt_files = []
+    other_files = []
+
     for root, dirs, files in os.walk(model_directory):
         for file in files:
             if file.endswith('.py') and file != '__init__.py':
                 full_path = os.path.join(root, file)
                 # Exclude this script itself
                 if os.path.abspath(full_path) != current_script:
-                    python_files.append(full_path)
+                    # Separate pyHGT files from other files
+                    rel_path = os.path.relpath(full_path, model_directory)
+                    if rel_path.startswith('pyHGT/'):
+                        pyhgt_files.append(full_path)
+                    else:
+                        other_files.append(full_path)
 
-    python_files.sort()  # Sort files alphabetically
+    # Sort both lists and combine with pyHGT files first
+    pyhgt_files.sort()
+    other_files.sort()
+    python_files = pyhgt_files + other_files
 
     if not python_files:
         print(f"No Python files found in directory: {model_directory}")
