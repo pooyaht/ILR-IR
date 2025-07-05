@@ -186,7 +186,7 @@ def create_notebook_from_python_files(model_directory, output_notebook_path):
                         "            data='./data/ICEWS14_forecasting',\n")
                     fixed_content.append("            state='train',\n")
                     fixed_content.append("            ratio=1,\n")
-                    fixed_content.append("            his_len=50\n")
+                    fixed_content.append("            his_len=13\n")
                     fixed_content.append("        )\n")
                     fixed_content.append("    else:\n")
                     fixed_content.append(
@@ -206,12 +206,15 @@ def create_notebook_from_python_files(model_directory, output_notebook_path):
                         "        data='./data/ICEWS14_forecasting',\n")
                     fixed_content.append("        state='train',\n")
                     fixed_content.append("        ratio=1,\n")
-                    fixed_content.append("        his_len=50\n")
+                    fixed_content.append("        his_len=13\n")
                     fixed_content.append("    )\n")
                     fixed_content.append("else:\n")
                     fixed_content.append(
                         "    # Running as script - use command line args\n")
                     fixed_content.append("    args = parse_args()\n")
+                elif "from pyHGT.model import *" in line or "from pyHGT.data import *" in line or "from pyHGT.model import" in line or "from pyHGT.data import" in line:
+                    # Skip all pyHGT imports (both wildcard and specific)
+                    continue
                 else:
                     # Keep the original line
                     if line_with_ending.endswith('\n'):
