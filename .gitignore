@@ -1,0 +1,3 @@
+*.pk
+__pycache__
+.venv
