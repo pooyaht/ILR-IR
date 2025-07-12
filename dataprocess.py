@@ -7,22 +7,19 @@ from sklearn.utils import shuffle
 from operator import itemgetter
 from pyHGT.data import *
 import dill
+from config import config
 
 import argparse
 
 
 def parse_args():
-    args = argparse.ArgumentParser()
-    args.add_argument("-data", "--data",
-                      default="./data/ICEWS14_forecasting", help="data directory")
-    args.add_argument("-state", "--state",
-                      default="train", help="train or test")
-    args.add_argument("-neg_ratio", "--ratio",
-                      default=1, type=int, help="training neg ratio")
-    args.add_argument("-his_len", "--his_len",
-                      default=50, type=int, help="1 hop historial relations",)
+    args = argparse.Namespace(
+        data=config["data"]["data_dir"],
+        state=config["training"]["train"],
+        ratio=config["temporal"]["neg_ratio"],
+        his_len=config["ds_specific"][config["data"]["dataset"]]
+    )
 
-    args = args.parse_args()
     return args
 
 

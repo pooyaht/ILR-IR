@@ -119,7 +119,12 @@ def create_notebook_from_python_files(model_directory, output_notebook_path):
     # Sort both lists and combine with pyHGT files first
     pyhgt_files.sort()
     other_files.sort()
-    python_files = pyhgt_files + other_files
+
+    try:
+        other_files.remove('./config.py')
+        python_files = ['./config.py'] + pyhgt_files + other_files
+    except ValueError:
+        python_files = pyhgt_files + other_files
 
     if not python_files:
         print(f"No Python files found in directory: {model_directory}")
@@ -161,66 +166,15 @@ def create_notebook_from_python_files(model_directory, output_notebook_path):
 
             # Fix argparse for notebook compatibility by replacing parse_args() calls
             fixed_content = []
-            in_main_block = False
 
             for line_with_ending in source_lines:
                 line = line_with_ending.rstrip('\n')
 
-                # Check if we're in the main block
-                if "if __name__ == '__main__':" in line:
-                    in_main_block = True
-
-                # Replace problematic argparse lines
-                if "args = args.parse_args()" in line:
-                    # Replace with notebook-compatible version
-                    fixed_content.append(
-                        "    # Notebook-compatible argument parsing\n")
-                    fixed_content.append("    import sys\n")
-                    fixed_content.append(
-                        "    if 'ipykernel' in sys.modules:\n")
-                    fixed_content.append(
-                        "        # Running in notebook - use defaults\n")
-                    fixed_content.append(
-                        "        args = argparse.Namespace(\n")
-                    fixed_content.append(
-                        "            data='./data/ICEWS14_forecasting',\n")
-                    fixed_content.append("            state='train',\n")
-                    fixed_content.append("            ratio=1,\n")
-                    fixed_content.append("            his_len=13\n")
-                    fixed_content.append("        )\n")
-                    fixed_content.append("    else:\n")
-                    fixed_content.append(
-                        "        # Running as script - use command line args\n")
-                    fixed_content.append("        args = args.parse_args()\n")
-                elif "args = parse_args()" in line and not in_main_block:
-                    # This is the global args = parse_args() call
-                    fixed_content.append(
-                        "# Notebook-compatible argument setup\n")
-                    fixed_content.append("import sys\n")
-                    fixed_content.append("if 'ipykernel' in sys.modules:\n")
-                    fixed_content.append(
-                        "    # Running in notebook - create args with defaults\n")
-                    fixed_content.append("    import argparse\n")
-                    fixed_content.append("    args = argparse.Namespace(\n")
-                    fixed_content.append(
-                        "        data='./data/ICEWS14_forecasting',\n")
-                    fixed_content.append("        state='train',\n")
-                    fixed_content.append("        ratio=1,\n")
-                    fixed_content.append("        his_len=13\n")
-                    fixed_content.append("    )\n")
-                    fixed_content.append("else:\n")
-                    fixed_content.append(
-                        "    # Running as script - use command line args\n")
-                    fixed_content.append("    args = parse_args()\n")
-                elif "from pyHGT.model import *" in line or "from pyHGT.data import *" in line or "from pyHGT.model import" in line or "from pyHGT.data import" in line:
+                if "from pyHGT.model import *" in line or "from pyHGT.data import *" in line or "from pyHGT.model import" in line or "from pyHGT.data import" in line:
                     # Skip all pyHGT imports (both wildcard and specific)
                     continue
                 else:
-                    # Keep the original line
-                    if line_with_ending.endswith('\n'):
-                        fixed_content.append(line_with_ending)
-                    else:
-                        fixed_content.append(line_with_ending)
+                    fixed_content.append(line_with_ending)
 
             source_lines = fixed_content
 

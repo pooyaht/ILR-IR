@@ -2,27 +2,15 @@ import torch
 import torch.nn as nn
 from torch.nn.utils.rnn import pack_padded_sequence
 import torch.nn.functional as F
+from config import config
 import math
 
 
-def get_device():
-    if torch.backends.mps.is_available():
-        device = torch.device('mps')
-        return device, True
-    elif torch.cuda.is_available():
-        device = torch.device('cuda')
-        return device, True
-    else:
-        device = torch.device('cpu')
-        return device, False
-
-
-DEVICE, HAS_ACCELERATION = get_device()
-CUDA = HAS_ACCELERATION
+DEVICE = config["device"]["device_type"]
+HAS_ACCELERATION = DEVICE == 'cuda'
 
 
 class RelTemporalEncoding(nn.Module):
-
     def __init__(self, n_hid, max_len=4020, dropout=0.2):
         super(RelTemporalEncoding, self).__init__()
         position = torch.arange(0., max_len).unsqueeze(1)

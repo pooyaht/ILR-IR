@@ -9,46 +9,27 @@ import time
 
 from pyHGT.model import *
 from pyHGT.data import *
+from config import config
 from torch.nn.utils.rnn import pad_sequence
 
 os.environ['CUDA_VISIBLE_DEVICES'] = '0'
-
-
-def get_device():
-    if torch.backends.mps.is_available():
-        device = torch.device('mps')
-        print("Using Apple MPS")
-        return device, True
-    elif torch.cuda.is_available():
-        device = torch.device('cuda')
-        print("Using CUDA")
-        return device, True
-    else:
-        device = torch.device('cpu')
-        print("Using CPU")
-        return device, False
-
-
-DEVICE, HAS_ACCELERATION = get_device()
-CUDA = HAS_ACCELERATION
+DEVICE = config["device"]["device_type"]
+HAS_ACCELERATION = DEVICE == 'cuda'
 
 
 def parse_args():
-    args = argparse.ArgumentParser()
-
-    args.add_argument("-data", "--data",
-                      default="./data/ICEWS14_forecasting", help="data directory")
-    args.add_argument('--dataset', type=str, default='ICEWS14_forecasting')
-    args.add_argument("-e_c", "--epochs_conv", type=int,
-                      default=100, help="Number of epochs")
-    args.add_argument("-w_conv", "--weight_decay_conv", type=float,
-                      default=1e-6, help="L2 reglarization for conv")
-    args.add_argument("-emb_size", "--embedding_size", type=int,
-                      default=200, help="Size of embeddings (if pretrained not used)")
-    args.add_argument("-l", "--lr", type=float, default=1e-4)
-
-    args = args.parse_args()
+    args = argparse.Namespace(
+        data=config["data"]["data_dir"],
+        dataset=config["data"]["dataset"],
+        epochs_conv=config["training"]["epochs_conv"],
+        weight_decay_conv=config["training"]["weight_decay_conv"],
+        embedding_size=config["model"]["embedding_size"],
+        lr=config["training"]["lr"]
+    )
     return args
+
+
+args = parse_args()
 
 
 def save_model(model, name, folder_name, epoch):
@@ -65,9 +46,9 @@ def mkdirs(path):
 
 args = parse_args()
 
-mkdirs('./results/bestmodel/{}/conv'.format(args.dataset))
-mkdirs('./results/bestmodel/{}/gat'.format(args.dataset))
-model_state_file = './results/bestmodel/{}/'.format(args.dataset)
+mkdirs(
+    f'./results/bestmodel/{config["data"]["dataset"]}/his_len_{config["ds_specific"][config["data"]["dataset"]]['his_len']}')
+model_state_file = f'./results/bestmodel/{config["data"]["dataset"]}/his_len_{config["ds_specific"][config["data"]["dataset"]]['his_len']}/'
 
 
 def load_data(args):
