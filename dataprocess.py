@@ -15,9 +15,9 @@ import argparse
 def parse_args():
     args = argparse.Namespace(
         data=config["data"]["data_dir"],
-        state=config["training"]["train"],
+        state=config["training"]["state"],
         ratio=config["temporal"]["neg_ratio"],
-        his_len=config["ds_specific"][config["data"]["dataset"]]
+        his_len=config["ds_specific"][config["data"]["dataset"]]['his_len']
     )
 
     return args
@@ -178,7 +178,7 @@ class Corpus:
                 list(set(flatten(quads_his)))]
             G.add_edges_from(triples_his[:, [0, 2]])
 
-        for idx in tqdm(times):
+        for idx in times:
 
             quads = t_quads[all_times[idx]]
             quad_id = []
@@ -337,7 +337,7 @@ class Corpus:
 
         paths_dict_copy = defaultdict(lambda: defaultdict(list))
 
-        for quad, pre, pid, length in tqdm(batch_quads):
+        for quad, _, _, length in batch_quads:
             target = []
             lens = []
             s, r, o = self.all_triples[quad]
