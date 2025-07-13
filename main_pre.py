@@ -47,8 +47,8 @@ def mkdirs(path):
 args = parse_args()
 
 mkdirs(
-    f'./results/bestmodel/{config["data"]["dataset"]}/his_len_{config["ds_specific"][config["data"]["dataset"]]['his_len']}')
-model_state_file = f'./results/bestmodel/{config["data"]["dataset"]}/his_len_{config["ds_specific"][config["data"]["dataset"]]['his_len']}/'
+    f'./results/bestmodel/{config["data"]["dataset"]}/his_len_{config["ds_specific"][config["data"]["dataset"]]["his_len"]}')
+model_state_file = f'./results/bestmodel/{config["data"]["dataset"]}/his_len_{config["ds_specific"][config["data"]["dataset"]]["his_len"]}'
 
 
 def load_data(args):
@@ -92,7 +92,7 @@ def train_conv(args):
     print("Number of epochs {}".format(args.epochs_conv))
 
     graph_train = renamed_load(
-        open(os.path.join(args.data + '/graph_preprocess_train.pk'), 'rb'))
+        open(os.path.join(args.data, '/graph_preprocess_train.pk'), 'rb'))
 
     total_time_steps = len(graph_train.t_r_id_p_dict)
     print(f"Total time steps per epoch: {total_time_steps}")
@@ -297,8 +297,8 @@ def evaluate_conv(args):
         mr, mrr, hits1, hits3, hits10, hits100 = 0, 0, 0, 0, 0, 0
         test_size = 0
         graph_test = renamed_load(
-            open(os.path.join(args.data + '/graph_preprocess_test.pk'), 'rb'))
-        for t, r_dict in graph_test.t_r_id_p_dict.items():
+            open(os.path.join(args.data, '/graph_preprocess_test.pk'), 'rb'))
+        for t, r_dict in tqdm(graph_test.t_r_id_p_dict.items()):
             size = 0
             ranks_tail = []
             reciprocal_ranks_tail = []

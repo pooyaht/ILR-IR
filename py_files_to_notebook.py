@@ -82,6 +82,7 @@ def create_notebook_from_python_files(model_directory, output_notebook_path):
             "    \n",
             "    # Copy data using shell command\n",
             "    !cp -vr /tmp/ILR-IR/data /content/drive/MyDrive/ILR-IR/\n",
+            "    !cp -vr /tmp/ILR-IR/results /content/drive/MyDrive/ILR-IR/\n",
             "    \n",
             "except:\n",
             "    print('Git clone failed. Please manually download the data from: https://github.com/pooyaht/ILR-IR/tree/main/data')\n",
@@ -169,7 +170,8 @@ def create_notebook_from_python_files(model_directory, output_notebook_path):
 
             for line_with_ending in source_lines:
                 line = line_with_ending.rstrip('\n')
-
+                if "from config import config" in line:
+                    continue
                 if "from pyHGT.model import *" in line or "from pyHGT.data import *" in line or "from pyHGT.model import" in line or "from pyHGT.data import" in line:
                     # Skip all pyHGT imports (both wildcard and specific)
                     continue
