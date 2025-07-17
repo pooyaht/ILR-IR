@@ -53,10 +53,9 @@ class TypeGAT(nn.Module):
     def forward2(self, path_index, batch_relation, paths, paths_time, lengths, path_r, path_neg_index, batch_his_r):
         r_inp = self.relation_embeddings
 
-        # update relations r<-path
         pad_r = torch.cat((r_inp, self.pad), dim=0)
         emb = pad_r[paths]
-        emb = self.emb(emb, paths_time)  # temporal information
+        emb = self.emb(emb, paths_time)
 
         lengths_cpu = lengths.cpu()
         packed = pack_padded_sequence(
@@ -68,10 +67,8 @@ class TypeGAT(nn.Module):
 
         pad_r = torch.cat((F.normalize(r_inp, dim=1),
                           self.pad.to(r_inp.device)), dim=0)
-        # pad_r = F.normalize(pad_r, dim=1)
         path_emb = F.normalize(path_emb, dim=1)
 
-        # batch*num_paths
         scores = torch.mm(path_emb, pad_r[batch_relation].t()).t()
         mask = torch.zeros((scores.size(0), scores.size(1))).to(scores.device)
         m_index = min(path_index.size(1), mask.size(1))
@@ -82,13 +79,6 @@ class TypeGAT(nn.Module):
         his_score = torch.mean(torch.diagonal(
             scores_r[:, batch_his_r], dim1=0, dim2=1).t(), 1)
 
-        # scores = torch.mm(path_emb, pad_r[batch_relation[0]].unsqueeze(1)).squeeze(1)
-        # max_score, max_id = torch.max(scores[path_index], 1)
-
-        # scores_r = torch.mm(pad_r, pad_r[batch_relation[0]].unsqueeze(1)).squeeze(1)
-        # his_score = torch.mean(scores_r[batch_his_r], 1)
-
-        # score = max_score+his_score
         score = max_score
 
         return score, path_emb[path_neg_index], pad_r[path_r]
@@ -98,10 +88,9 @@ class TypeGAT(nn.Module):
 
         pad = torch.zeros(1, self.out_dim)
 
-        # update relations r<-path
         pad_r = torch.cat((r_inp, pad.to(r_inp.device)), dim=0)
         emb = pad_r[paths]
-        emb = self.emb(emb, paths_time)  # temporal information
+        emb = self.emb(emb, paths_time)
         lengths_cpu = lengths.cpu()
         packed = pack_padded_sequence(
             emb, lengths_cpu, batch_first=True, enforce_sorted=False)
@@ -123,9 +112,45 @@ class TypeGAT(nn.Module):
         his_score = torch.mean(scores_r[batch_his_r], 1)
 
         score = max_score + his_score
-        # score = his_score
 
         return score
+
+    def test_with_interpretability(self, path_index, batch_relation, paths, lengths, paths_time, batch_his_r):
+        r_inp = self.relation_embeddings
+
+        pad = torch.zeros(1, self.out_dim)
+
+        pad_r = torch.cat((r_inp, pad.to(r_inp.device)), dim=0)
+        emb = pad_r[paths]
+        emb = self.emb(emb, paths_time)
+        lengths_cpu = lengths.cpu()
+        packed = pack_padded_sequence(
+            emb, lengths_cpu, batch_first=True, enforce_sorted=False)
+        _, hidden = self.gru(packed)
+        path_emb = torch.cat(
+            (self.pad.to(r_inp.device), hidden.squeeze(0)), dim=0)
+
+        del emb, packed, paths
+        pad_r = torch.cat((F.normalize(r_inp, dim=1),
+                          pad.to(r_inp.device)), dim=0)
+        path_emb = F.normalize(path_emb, dim=1)
+
+        scores = torch.mm(
+            path_emb, pad_r[batch_relation[0]].unsqueeze(1)).squeeze(1)
+        max_score, max_id = torch.max(scores[path_index], 1)
+
+        scores_r = torch.mm(
+            pad_r, pad_r[batch_relation[0]].unsqueeze(1)).squeeze(1)
+        his_score = torch.mean(scores_r[batch_his_r], 1)
+
+        score = max_score + his_score
+
+        return {
+            'scores': score,
+            'best_paths_idx': max_id,
+            'his_scores': his_score,
+            'path_scores': max_score
+        }
 
     def __repr__(self):
         return self.__class__.__name__
