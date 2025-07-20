@@ -34,8 +34,8 @@ args = parse_args()
 
 def save_model(model, name, folder_name, epoch):
     print("Saving Model")
-    torch.save(model.state_dict(),
-               (folder_name + "trained"+str(epoch)+".pth"))
+    torch.save(model.state_dict(), os.path.join(
+        folder_name, f"trained{str(epoch)}.pth"))
     print("Done saving Model")
 
 
@@ -92,7 +92,7 @@ def train_conv(args):
     print("Number of epochs {}".format(args.epochs_conv))
 
     graph_train = renamed_load(
-        open(os.path.join(args.data, '/graph_preprocess_train.pk'), 'rb'))
+        open(os.path.join(args.data, 'graph_preprocess_train.pk'), 'rb'))
 
     total_time_steps = len(graph_train.t_r_id_p_dict)
     print(f"Total time steps per epoch: {total_time_steps}")
@@ -270,7 +270,8 @@ def train_conv(args):
 
         epoch_losses.append(avg_epoch_loss)
 
-        save_model(model, args.data, model_state_file, epoch)
+        if epoch == 99:
+            save_model(model, args.data, model_state_file, epoch)
 
         if len(epoch_losses) > 5:
             recent_losses = epoch_losses[-5:]
@@ -297,7 +298,7 @@ def evaluate_conv(args):
         mr, mrr, hits1, hits3, hits10, hits100 = 0, 0, 0, 0, 0, 0
         test_size = 0
         graph_test = renamed_load(
-            open(os.path.join(args.data, '/graph_preprocess_test.pk'), 'rb'))
+            open(os.path.join(args.data, 'graph_preprocess_test.pk'), 'rb'))
         for t, r_dict in tqdm(graph_test.t_r_id_p_dict.items()):
             size = 0
             ranks_tail = []
