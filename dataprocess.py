@@ -195,8 +195,6 @@ class Corpus:
                         length = nx.shortest_path_length(
                             G, triple[0], triple[2])
                     else:
-                        # current facts
-                        # G.add_edge(triple[0], triple[2])
                         continue
                 except:
                     pass
@@ -220,8 +218,6 @@ class Corpus:
                                 if [triple[0], triple[1], target] not in valid_triples:
                                     neg_len[quad].append([target, l])
 
-                # current facts
-                # G.add_edge(triple[0], triple[2])
             if len(quad_id) != 0 and len(neg_len) != 0:
                 quads_select[idx] = quad_id
                 quads_neg[idx] = neg_len
@@ -233,7 +229,7 @@ class Corpus:
 
     def get_path_test(self, args, G, s, targets, lens, cur_time, num_r):
         target_pid = defaultdict(list)
-        target_his_pid = defaultdict(list)  # s,o之间的历史交互关系
+        target_his_pid = defaultdict(list)
 
         try:
             paths = []
@@ -241,25 +237,22 @@ class Corpus:
                 c_graph = G.subgraph([s, targets[i]])
                 sG = G.subgraph(c_graph)
                 paths.extend(list(all_simple_edge_paths(sG, s, targets[i], 3)))
-                # paths.extend(list(all_simple_edge_paths(sG, s, targets[i], max(lens[i],2))))
-                # paths.extend(list(all_simple_edge_paths(sG, s, targets[i], lens[i])))
 
             path_len = [len(path) for path in paths]
             p_id = np.argsort(path_len)
 
             tar_dict = {}
-        except:  # 可省略错误类型
+        except:
             print('sample error')
-        else:  # 没有错误的话继续执行下面的程序
+        else:
             if len(paths) != 0:
-                # print(paths)
                 for id in p_id:
                     path = paths[id]
 
                     t = np.array(path)[-1][1]
                     pa = np.array(path)[:, 2]
                     pa_t = [cur_time - G.edges[p]['time']
-                            for p in path]  # 相对时间
+                            for p in path]
 
                     if t not in tar_dict.keys():
                         tar_dict[t] = [len(pa), max(pa_t)]
@@ -341,9 +334,6 @@ class Corpus:
             target = []
             lens = []
             s, r, o = self.all_triples[quad]
-            # if pid >= 0:
-            #    edges = np.array(self.all_triples)[quads_cur[pre:pid]][:, [0, 2, 1]]
-            #    G.add_edges_from(edges, time=cur_time)
 
             target.append(o)
             lens.append(length)

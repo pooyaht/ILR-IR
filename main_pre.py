@@ -1,3 +1,4 @@
+import pandas as pd
 import torch
 from torch.autograd import Variable
 import torch.nn as nn
@@ -6,6 +7,8 @@ import numpy as np
 import argparse
 import os
 import time
+
+from tqdm import tqdm
 
 from pyHGT.model import *
 from pyHGT.data import *
@@ -121,11 +124,9 @@ def train_conv(args):
             batch_relation = []
             batch_his_r = []
 
-            # for neg paths
             path_r = []
             path_neg_index = []
 
-            # Count total batches in this time step
             total_relations = len(r_dict)
             relations_processed = 0
 
