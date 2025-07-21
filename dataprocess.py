@@ -543,7 +543,6 @@ def main():
             graph_test.t_paths_m_time[idx] = paths_m_time
 
             graph_test.r_copy[idx] = paths_dict_copy
-            print(idx, len(lengths))
 
         del quads_select, quads_neg
         print("select quads:", quads_select_num)
